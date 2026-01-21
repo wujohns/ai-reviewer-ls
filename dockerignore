@@ -1,0 +1,21 @@
+# 排除 node_modules 目录
+node_modules/
+
+# 排除文件上传目录
+file_upload/
+
+# 排除环境变量文件
+.env
+
+# 排除日志文件
+*.log
+
+# 排除示例项目
+example/
+
+# 排除测试文件
+app.test.js
+
+# 排除 Git 相关文件
+.git/
+.gitignore
