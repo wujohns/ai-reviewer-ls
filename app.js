@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { analysisCode } = require('./services/analysis');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,7 +32,7 @@ app.get('/health', (req, res) => {
 });
 
 // 文件上传接口
-app.post('/upload', upload.single('code_zip'), (req, res) => {
+app.post('/upload', upload.single('code_zip'), async (req, res) => {
   // 输出problem_description到控制台
   if (req.body.problem_description) {
     console.log('Problem Description:', req.body.problem_description);
@@ -41,16 +42,18 @@ app.post('/upload', upload.single('code_zip'), (req, res) => {
     return res.status(400).json({ error: 'No zip file uploaded' });
   }
   
-  res.status(200).json({
-    message: 'File uploaded successfully',
-    file: {
-      name: req.file.originalname,
-      path: req.file.path,
-      size: req.file.size,
-      mimetype: req.file.mimetype
-    },
-    problem_description: req.body.problem_description
-  });
+  try {
+    // 调用分析代码的方法
+    const analysisResult = await analysisCode(req.body.problem_description, req.file.path);
+    
+    res.status(200).json(analysisResult);
+  } catch (error) {
+    console.error('Analysis error:', error);
+    res.status(500).json({ 
+      error: 'An error occurred during code analysis',
+      details: error.message 
+    });
+  }
 });
 
 // 启动服务器

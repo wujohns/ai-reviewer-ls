@@ -23,7 +23,8 @@ async function chatWithTool (prompt, tools, schema) {
     max_tokens: 10240,
     messages: [{ role: 'user', content: prompt }],
     betas: ["structured-outputs-2025-11-13"],
-    model: 'claude-haiku-4-5-20251001', // 'claude-sonnet-4-5-20250929',
+    // model: 'claude-haiku-4-5-20251001',
+    model: 'claude-sonnet-4-5-20250929',
     tools: tools,
     output_format: {
       type: 'json_schema',
@@ -33,20 +34,6 @@ async function chatWithTool (prompt, tools, schema) {
 
   return message.content
 }
-
-// const test = async () => {
-//   const schema = z.object({
-//     mood: z.string().describe('The mood of the user'),
-//   })
-
-//   const response = await chatWithTool('I am feeling happy', [], schema.toJSONSchema())
-
-//   console.log(response)
-// }
-
-// test().then(() => {
-//   console.log('test passed')
-// })
 
 module.exports = {
   chatWithTool

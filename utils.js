@@ -30,8 +30,8 @@ async function unzipAndGetDirectoryTree(zipFilePath) {
     // 创建 AdmZip 实例
     const zip = new AdmZip(zipFilePath);
     
-    // 解压所有文件到同目录
-    zip.extractAllTo(zipDir, true);
+    // 解压所有文件到与 zip 文件同名的目录
+    zip.extractAllTo(extractedDir, true);
     
     // 获取解压后的目录树结构
     const directoryTree = getDirectoryTree(extractedDir);
@@ -103,43 +103,34 @@ function getDirectoryTree(dirPath) {
 }
 
 /**
- * 将目录树结构转换为 README 友好的 Markdown 格式
+ * 将目录树结构转换为只包含文件路径的 Markdown 格式
  * @param {Object} tree - 目录树结构
- * @returns {string} Markdown 格式的目录树
+ * @returns {string} 只包含文件路径列表的 Markdown 格式
  */
 function convertDirectoryTreeToMarkdown(tree) {
-  // 内部递归函数
-  function buildMarkdown(item, indent = '', isLast = true) {
-    // 获取完整的相对路径
-    const fullPath = item.path === '.' ? '.' : item.path;
-    
-    // 确定项目前缀
-    const prefix = item.type === 'directory' ? '📁 ' : '📄 ';
-    
-    // 确定连接线
-    const connector = isLast ? '└── ' : '├── ';
-    
-    // 构建当前行，使用完整的相对路径
-    let line = `${indent}${connector}${prefix}${fullPath}\n`;
-    
-    // 处理子项
-    if (item.children && item.children.length > 0) {
-      // 确定下一级的缩进
-      const nextIndent = indent + (isLast ? '    ' : '│   ');
-      
-      // 遍历子项
-      for (let i = 0; i < item.children.length; i++) {
-        const child = item.children[i];
-        const isLastChild = i === item.children.length - 1;
-        line += buildMarkdown(child, nextIndent, isLastChild);
+  // 收集所有文件路径
+  const filePaths = [];
+  
+  // 内部递归函数，用于遍历目录树并收集文件路径
+  function collectFilePaths(item) {
+    if (item.type === 'file') {
+      // 如果是文件，添加到路径列表
+      filePaths.push(item.path);
+    } else if (item.children && item.children.length > 0) {
+      // 如果是目录，递归遍历其子项
+      for (const child of item.children) {
+        collectFilePaths(child);
       }
     }
-    
-    return line;
   }
   
-  // 调用内部函数开始构建 Markdown
-  return '# 项目结构\n\n```\n' + buildMarkdown(tree).trim() + '\n```';
+  // 开始收集文件路径
+  collectFilePaths(tree);
+  
+  // 生成 Markdown 格式的文件路径列表
+  const markdownContent = filePaths.map(path => `- ${path}`).join('\n');
+  
+  return '# 项目文件列表\n\n```\n' + markdownContent + '\n```';
 }
 
 function render (tpl, data) {
@@ -147,13 +138,18 @@ function render (tpl, data) {
 }
 
 async function parallelLimit (dataList, func, limit) {
-  const funcList = dataList.map((item) => (callback) => {
-    console.log('item------------', item)
-    func(item)
-      .then((res) => callback(null, res))
-      .catch((err) => callback(err, null))
-  })
-  return await async.parallelLimit(funcList, limit)
+  const funcList = []
+  for (const item of dataList) {
+    const itemFunc = (callback) => {
+      func(item)
+        .then((res) => callback(null, res))
+        .catch((err) => callback(err, null))
+    }
+    funcList.push(itemFunc)
+  }
+
+  const result = await async.parallelLimit(funcList, limit)
+  return result
 }
 
 /**

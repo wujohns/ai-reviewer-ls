@@ -3,3 +3,4 @@ file_upload/
 .env
 *.log
 .env
+example/nestjs-channel-messenger-demo-main/
