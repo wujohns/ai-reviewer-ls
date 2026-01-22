@@ -1,5 +1,5 @@
-# 使用 Node.js 18 LTS 作为基础镜像
-FROM node:18-alpine
+# 使用 Node.js 22 LTS 作为基础镜像
+FROM node:22.5.1
 
 # 设置工作目录
 WORKDIR /app

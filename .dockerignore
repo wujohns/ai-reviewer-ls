@@ -4,9 +4,6 @@ node_modules/
 # 排除文件上传目录
 file_upload/
 
-# 排除环境变量文件
-.env
-
 # 排除日志文件
 *.log
 
